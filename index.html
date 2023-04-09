@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="description" content="My Home page" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="formart-detection" content="telephone=no" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="theme-color" media="(prefers-color-scheme:light)" content="lightcyan">
+    <meta name="theme-color" media="(prefers-color-scheme:dark)" content="black">
+    <meta name="apple-mobile-web-app-title" content="1tab">
+    <link rel="apple-touch-icon" href="./app.png">
+    <script src="./i18n/i18next-22.4.14/i18next.min.js"></script>
+    <script src="./i18n/i18next-xhr-backend-master/i18nextXHRBackend.min.js"></script>
+    <!-- <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js');
+        }
+    </script> -->
+    <link href="./style.css" rel="stylesheet" type="text/css" />
+    <title>Home Page</title>
+    <meta name="description" lang="es" content="This is a user-friendly new tab page with suggested words and search engines, making browsing easy and organized.">
+    <meta name="description" lang="zh" content="呢个页面係一個新標籤頁面，佢嘅設計簡約得體，支援唔同嘅建議詞同搜尋引擎，提供高效同舒適嘅瀏覽體驗。">
+    <meta name="description" lang="ja" content="このページはシンプルな新しいタブページで、さまざまな提案ワードと検索エンジンを使えます。ブラウザの整理整頓が簡単にでき、快適なブラウジング体験ができますよ。">
+</head>
+
+<body>
+    <div class="bg vid">
+        <video id="video" autoplay muted></video>
+        <canvas id="canvas"></canvas>
+    </div>
+    <div class="bg">
+        <div class="mask"></div>
+    </div>
+
+    <section class="all">
+        <div class="search">
+            <button for="search_engine" class="search_engine back" title="You can click to change the search engine" i18n-type='{"title":"search_engine_btn"}'></button>
+            <select id="search_engine">
+                <option value="google">Google</option>
+                <option value="baidu">Baidu</option>
+                <option value="bing">Bing</option>
+            </select>
+            <input type="text" id="search_input" title="Enter the keywords you want to search for" autocomplete="off" placeholder=" " i18n-type='{"title":"search_input"}'>
+            <button type="button" id="search_btn" title="search button" i18n-type='{"title":"search_button"}'>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+                </svg>
+            </button>
+            <ul id="sug_list"></ul>
+        </div>
+        <div class="link-box"></div>
+        <div class="floating-btn" id="setting">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 16 16" style="fill:currentColor;"><path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/><path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/></svg>
+        </div>
+        <div class="range-bg">
+            <input id="maskValue" title="mask" type="range" class="range" min="0" max="99" step="1" value="75" onchange="setMask(this.value)" i18n-type='{"title":"mask_value"}'>
+        </div>
+        <footer></footer>
+    </section>
+    <div class="sug_select back">
+        <span id="weather" title="weather: wttr.in" tooltip='{"content": "Weather Source: wttr.in","delay":2}'></span>
+        <label for="sug_select" title="suggested word" i18n="suggestions" i18n-type='{"title":"suggested_word"}'>Suggestions</label>
+        <select id="sug_select" title="You can click to change the source of the suggested word" i18n-type='{"title":"sug_select"}'>
+            <option value="google" i18n='Google'>Google</option>
+            <option value="baidu" i18n='Baidu'>Baidu</option>
+            <option value="bing" i18n='Bing'>Bing</option>
+            <option value="close" i18n='Close'>Close</option>
+        </select>
+    </div>
+    <script src="./uuphy.js"></script>
+</body>
+
+</html>

@@ -4,6 +4,7 @@
 
 body {
     margin: 0;
+    background-color: #000;
 }
 
 .sug_select {
@@ -143,6 +144,12 @@ input:focus {
     visibility: hidden;
 }
 
+.f_hidden,
+.u_hidden {
+    opacity: 0;
+    /* 因为父元素调用 visibility: hidden 对于子元素图片的会造成视觉上的短暂停留 */
+}
+
 .all {
     display: flex;
     height: 100vh;
@@ -167,6 +174,10 @@ input:focus {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
+    --transparent: url(data:image/webp;base64,UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA==);
+    background-size: 30px;
+    background-repeat: no-repeat;
+    background-position: 90% 80%;
 }
 
 .all:not(input) {
@@ -206,6 +217,17 @@ input:focus {
     background: rgba(255, 255, 255, 0.87);
     transition: all 0.2s ease-out;
     -webkit-transition: all 0.2s ease-out;
+    position: relative;
+}
+
+.card-link img {
+    position: absolute;
+    bottom: 9px;
+    right: 9px;
+    width: 30px;
+    opacity: .3;
+    transition: all 0.2s ease-out;
+    -webkit-transition: all 0.2s ease-out;
 }
 
 .card-desc {
@@ -228,6 +250,12 @@ input:focus {
     -webkit-transition: all 0.1s ease-out;
     transition: all 0.1s ease-out;
     color: yellowgreen;
+}
+
+.card a:hover img {
+    bottom: 12px;
+    opacity: .6;
+    transform: rotate(6deg);
 }
 
 
@@ -309,6 +337,7 @@ body::-webkit-scrollbar {
     pointer-events: none;
     justify-content: center;
     align-items: center;
+    transition: opacity 1s ease;
 }
 
 .bg video {

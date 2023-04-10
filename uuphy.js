@@ -8,6 +8,7 @@ let cache = {}; // 用于记忆建议词
 let sugTimer = null; // 用于延迟建议词
 let selectedIndex = -1; // 选中的建议词索引
 let quick; // 快速启动 内容
+let backgroundMode = savedValues.bgMode || 'pic'; // 快速启动 内容
 
 
 /// i18n ///
@@ -124,11 +125,12 @@ if (savedValues['sug_quick'] === undefined) {
             }, {
                 "ti": "YouTube",
                 "desc": "Enjoy the videos and music you love",
-                "url": "https://www.youtube.com/"
+                "url": "https://www.youtube.com/",
+                "ico": "https://www.gstatic.com/youtube/img/branding/favicon/favicon_144x144.png"
             }, {
                 "ti": "Gmail",
                 "desc": "Email service by Google.",
-                "url": "https://mail.google.com/"
+                "url": "https://mail.google.com/mail/?tab=rm&authuser=0&ogbl"
             }, {
                 "ti": "Facebook",
                 "desc": "Connect with friends, family and other people you know.",
@@ -531,11 +533,30 @@ sug_select.addEventListener("change", () => {
     localStorage.setItem("setting", JSON.stringify(savedValues));
 });
 
+const getFaviconUrl = (url) => {
+    // return `https://www.google.com/s2/favicons?sz=64&domain=${url}`;
+    const domain = url.split('/')[2]; // 提取域名
+    return `https://${domain}/favicon.ico`;
+}
+
 displayQuick(); // 显示快速启动
 function displayQuick(c = quick) {
     document.querySelector('.link-box').innerHTML = c.map((c, index) =>
-        `<div class="card"><a href="${c.url}" id="link${index}" class="card-link" target="_blank"><div class="card-ti">${c.ti}</div><div class="card-desc">${c.desc}</div></a></div>`).join('');
+        `<div class="card"><a href="${c.url}" id="link${index}" class="card-link" target="_blank"><div class="card-ti">${c.ti}</div><div class="card-desc">${c.desc}</div><img src="" name="${c.ico||getFaviconUrl(c.url)}" onerror="this.src='data:image/webp;base64,UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA==';" /></a></div>`).join('');
 }
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => {
+        const errorImgs = document.querySelectorAll('img[onerror]');
+        // 遍历所有带有 onerror 属性的 img 元素
+        errorImgs.forEach((img) => {
+            // 获取 img 元素的 name 属性值
+            const name = img.getAttribute('name');
+            // 将 name 属性值赋值给 img 元素的 src 属性
+            img.setAttribute('src', name);
+            img.removeAttribute('name');
+        });
+    }, 200);
+});
 
 labelSwitcher("search_engine");
 
@@ -1138,34 +1159,42 @@ video.onplay = function() {
         video.style.opacity = 1;
     }, 1000);
 }
-document.addEventListener("visibilitychange", function() {
-    const E = document.querySelectorAll('.bg');
-    switch (document.visibilityState) {
-        case 'visible': // 返回标签页
-            setTimeout(() => {
-                E.forEach((e) => {
-                    e.removeAttribute('style')
-                });
-                setTimeout(() => {
-                    video.play();
-                }, 700);
-            }, 300);
-            break;
-        case 'hidden': // 离开标签页
-            E.forEach((e) => {
-                e.setAttribute('style', 'display:none')
-            });
-            video.pause();
-            break;
-    }
-})
 
 
 const indexedDB = window.indexedDB;
 
-vid();
-pic();
+switch (backgroundMode) {
+    case 'vid':
+        vid(); // 载入影片, 显示一张透明图
+        video.setAttribute('poster', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==');
+        document.addEventListener("visibilitychange", function() { // 当用户离开页面时, 暂停播放
+            const E = document.querySelectorAll('.bg');
+            switch (document.visibilityState) {
+                case 'visible': // 返回标签页
+                    setTimeout(() => {
+                        E.forEach((e) => {
+                            e.removeAttribute('style')
+                        });
+                        setTimeout(() => {
+                            video.play();
+                        }, 700);
+                    }, 300);
+                    break;
+                case 'hidden': // 离开标签页
+                    E.forEach((e) => {
+                        e.setAttribute('style', 'opacity: 0;')
+                    });
+                    video.pause();
+                    break;
+            }
+        })
+        break;
 
+    default:
+        pic();
+        video.style.opacity = 1;
+        break;
+}
 
 function pic() {
     let imgsTimer;
@@ -1240,37 +1269,36 @@ function vid() {
 
     request.onsuccess = event => {
         const db = event.target.result;
-
-
         const blobUrls = [];
 
         const transaction = db.transaction('videos', 'readonly');
         const objectStore = transaction.objectStore('videos');
 
-        const request = objectStore.getAll();
+        const request = objectStore.openCursor();
         request.onsuccess = event => {
-            const blobs = event.target.result;
-
-            if (blobs.length > 0) {
-                blobs.forEach(blob => {
-                    const url = URL.createObjectURL(blob);
-                    blobUrls.push(url);
-                });
-
-                // console.log(blobUrls)
-                video.src = blobUrls[0];
-
-                let currentIndex = 0;
-                video.src = blobUrls[currentIndex];
-
-                video.addEventListener('ended', () => {
-                    currentIndex = (currentIndex + 1) % blobUrls.length;
-                    video.src = blobUrls[currentIndex];
-                });
+            const cursor = event.target.result;
+            if (cursor) {
+                const blob = cursor.value;
+                const url = URL.createObjectURL(blob);
+                blobUrls.push(url);
+                cursor.continue();
             } else {
-                video.src = '';
+                if (blobUrls.length > 0) {
+                    let currentIndex = 0;
+                    video.src = blobUrls[currentIndex];
 
-                video.style.opacity = 1;
+                    video.addEventListener('ended', () => {
+                        currentIndex = (currentIndex + 1) % blobUrls.length;
+                        video.src = blobUrls[currentIndex];
+                    });
+                } else {
+                    video.src = '';
+                    pic(); // 没有影片切换到图片模式
+                    savedValues.bgMode = 'pic';
+                    localStorage.setItem("setting", JSON.stringify(savedValues)); // 保存为图片模式
+
+                    video.style.opacity = 1;
+                }
             }
         };
 

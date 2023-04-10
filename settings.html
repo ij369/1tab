@@ -110,11 +110,11 @@
     <br>
     <div>
         <p>Background Options</p>
-        <!-- <div>
+        <div>
             Mode
-            <label><input type="radio" name="mod">Pictures</label>
-            <label><input type="radio" name="mod">Videos</label>
-        </div> -->
+            <label><input type="radio" name="mod" value="pic">Pictures</label>
+            <label><input type="radio" name="mod" value="vid">Videos</label>
+        </div>
     </div>
     <label for="input" class="upload-btn">Library<span>Click to Select File</span></label>
     <input id="input" type="file" accept="image/*, video/*" multiple>
@@ -203,6 +203,23 @@
             langSelect.value = getUserLanguage(); // 加载完毕后赋值下拉框语言
             langSelect.addEventListener('change', e => {
                 changeLanguage(e.target.value);
+            });
+
+            if (savedValues.bgMode) {
+                document.querySelector(`input[type="radio"][name="mod"][value="${savedValues.bgMode}"]`).checked = true;
+            } else {
+                document.querySelector(`input[type="radio"][name="mod"][value="pic"]`).checked = true;
+            }
+            // 如果存在则选中设置存储的值, 否则默选图片模式
+
+
+            const bgModeRadios = document.querySelectorAll('input[name="mod"]');
+
+            bgModeRadios.forEach(radio => {
+                radio.addEventListener('change', (event) => {
+                    savedValues.bgMode = event.target.value;
+                    localStorage.setItem("setting", JSON.stringify(savedValues));
+                });
             });
         });
 
@@ -386,6 +403,9 @@
                         videoList.appendChild(li);
                     });
 
+                } else {
+                    savedValues.bgMode = 'pic';
+                    localStorage.setItem("setting", JSON.stringify(savedValues)); // 没有影片改为图片模式
                 }
             };
 

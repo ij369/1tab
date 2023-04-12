@@ -533,30 +533,58 @@ sug_select.addEventListener("change", () => {
     localStorage.setItem("setting", JSON.stringify(savedValues));
 });
 
-const getFaviconUrl = (url) => {
-    // return `https://www.google.com/s2/favicons?sz=64&domain=${url}`;
-    const domain = url.split('/')[2]; // 提取域名
-    return `https://${domain}/favicon.ico`;
-}
+const getFaviconUrl = (url, legacy = false) => legacy === false ? `https://www.google.com/s2/favicons?domain=${url}&sz=256` : `https://${url.split('/')[2]}/favicon.ico`;
 
 displayQuick(); // 显示快速启动
 function displayQuick(c = quick) {
     document.querySelector('.link-box').innerHTML = c.map((c, index) =>
-        `<div class="card"><a href="${c.url}" id="link${index}" class="card-link" target="_blank"><div class="card-ti">${c.ti}</div><div class="card-desc">${c.desc}</div><img src="" name="${c.ico||getFaviconUrl(c.url)}" onerror="this.src='data:image/webp;base64,UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA==';" /></a></div>`).join('');
+        `<div class="card"><a href="${c.url}" id="link${index}" class="card-link" target="_blank"><div class="card-ti">${c.ti}</div><div class="card-desc">${c.desc}</div><img src="" name="${c.ico||getFaviconUrl(c.url)}" namecn="${c.ico||getFaviconUrl(c.url,true)}" onerror="this.src='data:image/webp;base64,UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA==';" /></a></div>`).join('');
 }
-document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(() => {
-        const errorImgs = document.querySelectorAll('img[onerror]');
-        // 遍历所有带有 onerror 属性的 img 元素
-        errorImgs.forEach((img) => {
-            // 获取 img 元素的 name 属性值
-            const name = img.getAttribute('name');
-            // 将 name 属性值赋值给 img 元素的 src 属性
-            img.setAttribute('src', name);
-            img.removeAttribute('name');
+
+window.onload = async() => {
+    const errorImgs = document.querySelectorAll('img[onerror]'); // 遍历所有带有 onerror 属性的 img 元素
+
+    try {
+        const cdnResponse = await fetch('https://www.cloudflare.com/cdn-cgi/trace');
+        const cdnText = await cdnResponse.text();
+        const cdnLines = cdnText.trim().split('\n');
+        const cdnResult = {};
+        cdnLines.forEach(line => {
+            const [key, value] = line.split('=');
+            cdnResult[key] = value;
         });
-    }, 200);
-});
+        console.log('Cloudflare CDN:', cdnResult.loc);
+        switch (cdnResult.loc) {
+            case 'CN': // CN访问不了部分服务
+                // 遍历所有带有 onerror 属性的 img 元素
+                errorImgs.forEach((img) => {
+                    const name = img.getAttribute('namecn'); // 获取 img 元素的 name 属性值 
+                    img.setAttribute('src', name); // 将 name 属性值赋值给 img 元素的 src 属性
+                    img.removeAttribute('name');
+                    img.removeAttribute('namecn'); // 移除图标地址
+                });
+                break;
+
+            default:
+                errorImgs.forEach((img) => {
+                    const name = img.getAttribute('name');
+                    img.setAttribute('src', name);
+                    img.removeAttribute('name');
+                    img.removeAttribute('namecn'); // 移除图标地址
+                });
+                break;
+        }
+
+    } catch (error) { // CDN 挂了就改成透明
+        console.error(error);
+        errorImgs.forEach((img) => {
+            img.setAttribute('src', 'data:image/webp;base64,UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA=='); // 改成透明
+            img.removeAttribute('name');
+            img.removeAttribute('nameCN'); // 移除图标地址
+        });
+
+    }
+};
 
 labelSwitcher("search_engine");
 
@@ -993,11 +1021,9 @@ class ContextMenu {
                 }
                 // 
 
-                // if (quick.length < 8) {
-                //     hidCMItems([8], false); // 不隐藏
-                // } else {
-                //     hidCMItems([4], false); // 不隐藏
-                // }
+                if (quick.length > 7) { // 快速启动设置限制，最多8个
+                    hidCMItems([8], true); // 不隐藏
+                }
             }
 
 
@@ -1101,13 +1127,13 @@ const sc_setting = (original_url = '') => {
     dialog.id = 'shortcut_setting';
     dialog.innerHTML = `
     <form id="dialog_form">
-    <label for="dialog_ti">标题:</label>
-    <input type="text" id="dialog_ti" autocomplete="off" value="${original_url===''?'':findQuick(original_url)['ti']}"><br>
-    <label for="dialog_desc">描述:</label>
-    <input type="text" id="dialog_desc" autocomplete="off" value="${original_url===''?'':findQuick(original_url)['desc']}"><br>
-    <label for="dialog_url">网址:</label>
+    <label for="dialog_url">${i18next.t('URL')}:</label>
     <input type="text" id="dialog_url" autocomplete="off" value="${original_url}" pattern=".*:\/\/.*" required><br>
-    <div><button type="submit">确认</button><button onclick="shortcut_setting.remove()">取消</button></div>
+    <label for="dialog_ti">${i18next.t('Title')}:</label>
+    <input type="text" id="dialog_ti" autocomplete="off" value="${original_url===''?'':findQuick(original_url)['ti']}"><br>
+    <label for="dialog_desc">${i18next.t('Description')}:</label>
+    <input type="text" id="dialog_desc" autocomplete="off" value="${original_url===''?'':findQuick(original_url)['desc']}"><br>
+    <div><button type="submit">${i18next.t('Save')}</button><button onclick="shortcut_setting.remove()">${i18next.t('Cancel')}</button></div>
     </form>`;
 
     document.body.appendChild(dialog);

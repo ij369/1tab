@@ -24,5 +24,12 @@
     "language-en": "英文",
     "language-zh-CN": "簡體中文",
     "language-zh-HK": "繁體中文",
-    "language": "語言"
+    "language": "語言",
+    "Description": "說明",
+    "URL": "網址",
+    "Title": "標題",
+    "drag_mode": "拖曳模式",
+    "Save": "存檔",
+    "Cancel": "放棄",
+    "drag_tip": "現在可以進行拖曳排序了"
 }

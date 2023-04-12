@@ -24,5 +24,12 @@
     "language-en": "English",
     "language-zh-CN": "简体中文",
     "language-zh-HK": "繁體中文",
-    "language": "Language"
+    "language": "Language",
+    "Description": "Description",
+    "URL": "URL",
+    "Title": "Title",
+    "drag_mode": "Drag Mode",
+    "Save": "Save",
+    "Cancel": "Cancel",
+    "drag_tip": "A drag-and-drop sorting feature is now available"
 }

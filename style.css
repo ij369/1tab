@@ -24,6 +24,11 @@ body {
     appearance: none; */
 }
 
+select option {
+    color: #fff;
+    background: rgba(0, 0, 0, 0.7);
+}
+
 #sug_list {
     position: relative;
     text-align: start;

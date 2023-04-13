@@ -239,38 +239,44 @@ searchInput.addEventListener('keydown', (e) => {
     switch (e.key) {
         case 'ArrowDown':
         case 'ArrowRight':
-            e.preventDefault();
-            selectedIndex++;
-            if (selectedIndex >= sugList.children.length) {
-                selectedIndex = 0;
+            if (!sugList.classList.contains('IME')) { // 避免IME 上按键起冲突
+                e.preventDefault();
+                selectedIndex++;
+                if (selectedIndex >= sugList.children.length) {
+                    selectedIndex = 0;
+                }
+                updateSelected();
             }
-            updateSelected();
             break;
         case 'ArrowUp':
         case 'ArrowLeft':
-            e.preventDefault();
-            selectedIndex--;
-            if (selectedIndex < 0) {
-                selectedIndex = sugList.children.length - 1;
+            if (!sugList.classList.contains('IME')) {
+                e.preventDefault();
+                selectedIndex--;
+                if (selectedIndex < 0) {
+                    selectedIndex = sugList.children.length - 1;
+                }
+                updateSelected();
             }
-            updateSelected();
             break;
 
         case 'Enter':
-            if (selectedIndex >= 0) {
-                const selectedSug = sugList.children[selectedIndex];
-                searchInput.value = selectedSug.textContent;
-                const query = searchInput.value.trim();
-                if (query.length > 0) {
-                    searchKey(query); // 打开搜索
+            if (!sugList.classList.contains('IME')) {
+                if (selectedIndex >= 0) {
+                    const selectedSug = sugList.children[selectedIndex];
+                    searchInput.value = selectedSug.textContent;
+                    const query = searchInput.value.trim();
+                    if (query.length > 0) {
+                        searchKey(query); // 打开搜索
+                    }
+                } else {
+                    const query = searchInput.value.trim();
+                    if (query.length > 0) {
+                        searchKey(query); // 打开搜索
+                    }
                 }
-            } else {
-                const query = searchInput.value.trim();
-                if (query.length > 0) {
-                    searchKey(query); // 打开搜索
-                }
+                sugList.style.display = 'none';
             }
-            sugList.style.display = 'none';
             break;
 
         case 'Delete':
@@ -455,30 +461,20 @@ document.addEventListener('click', (event) => {
 
 
 const userAgent = window.navigator.userAgent;
-const platform = window.navigator.platform;
-const macPlatforms = ['Macintosh', 'MacIntel', 'MacPPC', 'Mac68K'];
-if (macPlatforms.indexOf(platform) !== -1) {
-    searchInput.addEventListener('compositionstart', function() {
-        sugList.classList.add('IME');
-    });
-    searchInput.addEventListener('compositionend', function() {
-        sugList.classList.remove('IME');
-    });
-} else if (/Linux/.test(userAgent)) {
-    searchInput.addEventListener('compositionstart', function() {
-        sugList.classList.add('IME');
-    });
-    searchInput.addEventListener('compositionend', function() {
-        sugList.classList.remove('IME');
-    });
-} else {
-    searchInput.addEventListener('compositionstart', function() {
-        sugList.classList.add('IME_other');
-    });
-    searchInput.addEventListener('compositionend', function() {
-        sugList.classList.remove('IME_other');
-    });
-} // 输入时调整对应高度 mac的IME高度比较固定
+const platform = navigator.userAgentData && navigator.userAgentData.platform || navigator.platform || ''; // 判断平台 platform将会弃用
+
+const IMEHeight = platform.toUpperCase().includes('MAC') ? '16' : platform.toUpperCase().includes('WIN') ? '20' : '18';
+// console.log(platform, IMEHeight);
+
+searchInput.addEventListener('compositionstart', function() {
+    const IME = savedValues['IME'] || IMEHeight; // 优先读取设置候选框高度 || mac的默认IME候选字号是16pt
+    sugList.setAttribute('style', `--IME-m-t:${IME}pt; display: block;`); // 内联样式声明设定的高度, 显示建议词列表
+    sugList.classList.add('IME'); // 添加候选框时的样式, 后续可以通过 sugList.classList.contains('IME') 来判读状态
+});
+searchInput.addEventListener('compositionend', function() {
+    sugList.classList.remove('IME');
+});
+
 
 /// 建议词&搜索处理 ///
 

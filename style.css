@@ -41,8 +41,20 @@ body {
     overflow-y: scroll;
 }
 
+#sug_list::-webkit-scrollbar {
+    display: none;
+}
+
+#sug_list {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    overflow-y: auto;
+}
+
 #sug_list.IME {
-    margin-top: 1.38em;
+    margin-top: 16pt;
+    margin-top: var(--IME-m-t);
+    /* 引用内联中的声明高度 */
 }
 
 #sug_list:empty {

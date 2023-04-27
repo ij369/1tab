@@ -4,470 +4,106 @@
 <head>
     <meta charset="UTF-8">
     <title>Settings</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-        }
-        
-        body {
-            background: transparent;
-            margin: 10px;
-            height: calc(100vh - 20px);
-        }
-        
-        .flex {
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .upload-btn {
-            display: block;
-            margin-top: 3px;
-            padding: 0;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        
-        label span {
-            background: #4caf50;
-            color: #fff;
-            user-select: none;
-            padding: 0 3px;
-            margin-left: 3px;
-            border-radius: 3px;
-            font-size: 15px;
-        }
-        
-        input[type='file'] {
-            display: none;
-        }
-        
-        ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            display: flex;
-            flex-wrap: nowrap;
-            overflow-y: scroll;
-        }
-        
-        li {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
-            width: 100px;
-            padding: 10px;
-            margin: 5px 3px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        
-        section {
-            max-width: 100px;
-            overflow: hidden;
-        }
-        
-        section span {
-            font-size: 12px;
-            max-height: 30px;
-        }
-        
-        button {
-            background-color: #d84315;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            padding: 5px 10px;
-            float: left;
-            cursor: pointer;
-            margin-top: 3px;
-        }
-        
-        button:hover {
-            background-color: #d32f2f;
-        }
-    </style>
+    <link href="./static/css/settings.css" rel="stylesheet" type="text/css" />
     <script src="./i18n/i18next-22.4.14/i18next.min.js"></script>
     <script src="./i18n/i18next-xhr-backend-master/i18nextXHRBackend.min.js"></script>
 </head>
 
 <body>
-    <h2>Settings</h2><br>
-    <label for="language" i18n='language'>Language</label>
-    <select id="language">
-        <option value="en">English</option>
-        <option value="zh-CN">简体中文</option>
-        <option value="zh-HK">繁體中文</option>
-    </select> <br>
-    <!-- <div>
-        <label>天气接口
-            <input>
-        </label>
-    </div> -->
-    <br>
-    <div>
-        <p>Background Options</p>
-        <div>
-            Mode
-            <label><input type="radio" name="mod" value="pic">Pictures</label>
-            <label><input type="radio" name="mod" value="vid">Videos</label>
+    <nav>
+        <div id="indicator"></div>
+        <a class="arrow" href="#display">Display</a>
+        <a class="arrow" href="#preferences">Preferences</a>
+        <a class="arrow" href="#background">Background</a>
+        <a class="arrow" href="#quick">Quick Launch</a>
+        <a class="arrow" href="#about">About</a>
+    </nav>
+    <header id="Setting">Settings</header>
+    <div class="content">
+
+        <div id="display">
+            <h3>Display</h3>
+            <label for="language" i18n='language'>Language</label>
+            <select id="language">
+                <option value="en">English</option>
+                <option value="zh-CN">简体中文</option>
+                <option value="zh-HK">繁體中文</option>
+            </select>
+        </div>
+        <br>
+        <div id="preferences">
+            <h3>Preferences</h3>
+            <div>
+                <label for="search_engine" class="search_engine back" title="You can click to change the search engine">搜索引擎</label>
+                <select id="search_engine" onchange="changePreferences(this.id,this.value)">
+                    <option value="google">Google</option>
+                    <option value="baidu">Baidu</option>
+                    <option value="bing">Bing</option>
+                </select>
+            </div>
+            <div>
+                <label for="sug_select" title="suggested word" i18n="suggestions" i18n-type='{"title":"suggested_word"}'>Suggestions</label>
+                <select id="sug_select" title="You can click to change the source of the suggested word" i18n-type='{"title":"sug_select"}' onchange="changePreferences(this.id,this.value)">
+                    <option value="google" i18n='Google'>Google</option>
+                    <option value="baidu" i18n='Baidu'>Baidu</option>
+                    <option value="bing" i18n='Bing'>Bing</option>
+                    <option value="close" i18n='Close'>Close</option>
+                </select>
+            </div>
+        </div>
+        <br>
+        <div id="background">
+            <h3>Background</h3>
+            <div>
+                <label for="Opacity">Opacity</label>
+                <input id="Opacity" type="number" value="67" min="1" max="99" step="1" onchange="parent.setMask(this.value);">
+                <h4>Mode</h4>
+                <label><input type="radio" name="mod" value="pic">Pictures</label>
+                <label><input type="radio" name="mod" value="vid">Videos</label>
+            </div>
+            <div>
+                <h4>Library</h4>
+                <label for="input" class="upload-btn"><span>Click to Select File</span></label>
+                <input id="input" type="file" accept="image/*, video/*" multiple>
+
+                <div class="library-list">
+                    <ul id="file-list"></ul>
+                    <ul id="video-list"></ul>
+                </div>
+            </div>
+        </div>
+        <br>
+        <div id="others">
+            <h3>Others</h3>
+            <div>
+                <h4>天气</h4>
+                <label><input type="radio" name="weather" value="close" onclick="weather.setAttribute('disabled','disabled');weather.value=``;setWeather()">Close</label>
+                <label><input type="radio" name="weather" value="wttr.in" onclick="weather.setAttribute('disabled','disabled');weather.value=`https:\/\/wttr.in\/?format=3`;setWeather()">Wttr.in</label>
+                <label><input type="radio" name="weather" value="personalAPI" onclick="weather.removeAttribute('disabled');weather.value=``;setWeather()">Other</label><br>
+                <textarea id="weather" autocomplete="off" disabled onchange="setWeather()"></textarea>
+            </div>
+            <div>
+                <h4>图标</h4>
+                <label><input type="radio" name="icon" value="close" onclick="weather.setAttribute('disabled','disabled')">close</label>
+                <label><input type="radio" name="icon" value="auto" onclick="weather.setAttribute('disabled','disabled')">Auto</label>
+                <label><input type="radio" name="icon" value="favicon" onclick="weather.setAttribute('disabled','disabled')">favicon.ico</label>
+                <label><input type="radio" name="icon" value="google" onclick="weather.setAttribute('disabled','disabled')">Google API</label><br>
+            </div>
+            <div>
+                <h4>快速启动</h4>
+                <label><input type="radio" name="quick" onclick="preset('universal')">预设1</label>
+                <label><input type="radio" name="quick" onclick="preset('CN')">预设2</label><br>
+                <textarea id="quick" autocomplete="off" onchange="saveQuick(this.value)"></textarea>
+            </div>
+        </div>
+        <br>
+        <div id="about">
+            <h3>About</h3>
+            <a href="https://github.com/ij369/1tab">Github</a>
         </div>
     </div>
-    <label for="input" class="upload-btn">Library<span>Click to Select File</span></label>
-    <input id="input" type="file" accept="image/*, video/*" multiple>
-    <div class="flex">
-        <ul id="file-list"></ul>
-        <ul id="video-list"></ul>
-    </div>
 
-    <script>
-        const savedLanguage = localStorage.getItem('language');
-        const savedValues = JSON.parse(localStorage.getItem("setting")) || {}; // 读取设置
-        const languages = {
-            'en-US': 'en',
-            'zh-CN': 'zh-CN',
-            'zh-HK': 'zh-HK'
-        }; // navigator.language: 文件名
-
-        const getUserLanguage = () => {
-            return savedLanguage || languages[navigator.language] || 'en';
-            // 存储语言 || 浏览器语言 || 默认
-        };
-
-        i18next.use(i18nextXHRBackend).init({
-            debug: false,
-            lng: getUserLanguage(),
-            fallbackLng: 'en', // 回滚语言
-            backend: {
-                loadPath: '../i18n/locales/{{lng}}.json',
-                cache: false // 禁用缓存
-            }
-        }, (err, t) => {
-            updateContent();
-        });
-
-        const updateContent = () => {
-            const elements = document.querySelectorAll('[i18n]');
-            elements.forEach(el => {
-                const content = el.getAttribute('i18n');
-                el.innerHTML = i18next.t(content);
-            });
-            const elements2 = document.querySelectorAll('[i18n-type]');
-            elements2.forEach(el => {
-                const attr = JSON.parse(el.getAttribute('i18n-type'));
-
-                Object.keys(attr).forEach(t => {
-                    // console.log(t, attr[t]);
-                    switch (t) {
-                        case 'input':
-                            el.value = i18next.t(attr[t]);
-                            break;
-                        case 'html':
-                            el.innerHTML = i18next.t(attr[t]);
-                            break;
-                        case 'title':
-                            el.title = i18next.t(attr[t]);
-                            break;
-                        case 'attr':
-                            const [key, attribute] = attr[t].split(':');
-                            console.log(key, attribute);
-                            el.setAttribute(key, i18next.t(attribute));
-                            break;
-
-                        default:
-                            el.innerText = attr[t];
-                            break;
-                    }
-                });
-
-            });
-        };
-
-        const changeLanguage = lang => {
-            i18next.changeLanguage(lang, (err, t) => {
-                localStorage.setItem('language', lang);
-                updateContent();
-                if (err) {
-                    console.log('语言配置出错', err);
-                    return;
-                }
-                updateContent();
-            });
-        };
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const langSelect = document.getElementById('language');
-            langSelect.value = getUserLanguage(); // 加载完毕后赋值下拉框语言
-            langSelect.addEventListener('change', e => {
-                changeLanguage(e.target.value);
-            });
-
-            if (savedValues.bgMode) {
-                document.querySelector(`input[type="radio"][name="mod"][value="${savedValues.bgMode}"]`).checked = true;
-            } else {
-                document.querySelector(`input[type="radio"][name="mod"][value="pic"]`).checked = true;
-            }
-            // 如果存在则选中设置存储的值, 否则默选图片模式
-
-
-            const bgModeRadios = document.querySelectorAll('input[name="mod"]');
-
-            bgModeRadios.forEach(radio => {
-                radio.addEventListener('change', (event) => {
-                    savedValues.bgMode = event.target.value;
-                    localStorage.setItem("setting", JSON.stringify(savedValues));
-                });
-            });
-        });
-
-        // 加载图像
-        const indexedDB = window.indexedDB;
-        // 打开或创建IndexedDB数据库
-        const imgsRequest = indexedDB.open('images-db', 1);
-        const vidsrequest = indexedDB.open('videos-db', 1);
-        let imgsDb;
-        let vidsDb;
-
-        imgsRequest.onupgradeneeded = event => {
-            imgsDb = event.target.result;
-            imgsDb.createObjectStore('images');
-        };
-
-        vidsrequest.onupgradeneeded = event => {
-            vidsDb = event.target.result;
-            vidsDb.createObjectStore('videos');
-        };
-
-
-        imgsRequest.onerror = event => {
-            console.error('图片数据库错误:', event.target.error);
-        };
-
-        vidsrequest.onerror = event => {
-            console.error('影片数据库错误:', event.target.error);
-        };
-
-
-        imgsRequest.onsuccess = event => {
-            imgsDb = event.target.result;
-            updatePicsList();
-        };
-
-        function updatePicsList() {
-            const fileList = document.getElementById('file-list');
-            const transaction = imgsDb.transaction(['images'], 'readonly');
-            const objectStore = transaction.objectStore('images');
-            const request = objectStore.getAllKeys();
-
-            request.onsuccess = event => {
-
-                const fileNames = event.target.result;
-                fileList.innerHTML = '';
-                fileNames.forEach(file => {
-                    const li = document.createElement('li');
-
-                    // 创建 canvas 元素
-                    const canvas = document.createElement('canvas');
-                    const dpr = window.devicePixelRatio || 1;
-                    canvas.width = 100 * dpr;
-                    canvas.height = 100 * dpr;
-                    canvas.style.width = '100px';
-                    canvas.style.height = '100px';
-                    canvas.title = file; // 提示词为文件名, 不一定会立即加载
-
-                    const fileName = document.createElement('section');
-                    fileName.title = file;
-                    fileName.innerHTML = filename(file); // 拆分文件名
-
-                    const deleteButton = document.createElement('button');
-                    deleteButton.innerText = 'Delete';
-                    deleteButton.addEventListener('click', () => {
-                        const deleteTransaction = imgsDb.transaction(['images'], 'readwrite');
-                        const deleteObjectStore = deleteTransaction.objectStore('images');
-                        const deleteRequest = deleteObjectStore.delete(file);
-                        deleteRequest.onsuccess = () => {
-
-                            let li = deleteButton.parentNode;
-                            li.parentNode.removeChild(li); // 删除
-                            updatePicsList();
-                        };
-                        deleteRequest.onerror = event => {
-                            console.error('IndexedDB error:', event.target.error);
-                        };
-                    });
-
-                    li.appendChild(canvas);
-
-                    li.appendChild(fileName);
-                    li.appendChild(deleteButton);
-                    fileList.appendChild(li);
-
-                    // 创建缩略图
-                    const transaction = imgsDb.transaction(['images'], 'readonly');
-                    const objectStore = transaction.objectStore('images');
-                    const getRequest = objectStore.get(file);
-                    getRequest.onsuccess = event => {
-                        const blob = event.target.result;
-                        const img = new Image();
-                        img.onload = () => {
-                            // 计算正方形边长和截取位置
-                            const size = Math.min(img.width, img.height);
-                            const x = (img.width - size) / 2;
-                            const y = (img.height - size) / 2;
-                            // 绘制缩略图
-                            const ctx = canvas.getContext('2d');
-                            ctx.scale(dpr, dpr);
-                            ctx.drawImage(img, x, y, size, size, 0, 0, canvas.width / 2, canvas.height / 2);
-                        };
-                        img.src = URL.createObjectURL(blob);
-                    };
-                });
-            };
-
-            request.onerror = event => {
-                console.error('IndexedDB error:', event.target.error);
-            };
-        }
-
-        vidsrequest.onsuccess = event => {
-            vidsDb = event.target.result;
-            updateVidsList();
-        };
-
-        const filename = (fileName) => {
-            const lastDotIndex = fileName.lastIndexOf('.'); // 最后一个句点
-            let name = fileName.slice(0, lastDotIndex);
-            if (name.length >= 27) {
-                name = fileName.slice(0, lastDotIndex).slice(0, 24) + '... '
-            } else {
-                name = fileName.slice(0, lastDotIndex)
-
-            }
-            const ext = '.' + fileName.slice(lastDotIndex + 1);
-            // return {
-            //     name, // 文件名
-            //     ext // 后缀名
-            // };
-            return `<span>${name}</span><span>${ext}</span>`
-
-        };
-
-        function updateVidsList(blobUrls = []) {
-            const videoList = document.getElementById('video-list');
-            const transaction = vidsDb.transaction('videos', 'readonly');
-            const objectStore = transaction.objectStore('videos');
-            const request = objectStore.getAll();
-
-            request.onsuccess = event => {
-                const blobs = event.target.result;
-                videoList.innerHTML = '';
-
-                if (blobs.length > 0) {
-                    blobs.forEach(blob => {
-                        const url = URL.createObjectURL(blob);
-                        blobUrls.push(url);
-
-                        const li = document.createElement('li');
-                        const a = document.createElement('video');
-                        const fileName = document.createElement('section');
-                        fileName.title = blob.name;
-                        fileName.innerHTML = filename(blob.name);
-                        const deleteButton = document.createElement('button');
-                        a.textContent = blob.name;
-                        a.src = url;
-                        a.height = 100;
-                        a.width = 100;
-                        a.target = '_blank';
-                        a.title = blob.name; // 提示词为文件名, 不一定会立即加载
-                        deleteButton.textContent = 'Delete';
-                        deleteButton.addEventListener('click', () => {
-                            const deleteTransaction = vidsDb.transaction('videos', 'readwrite');
-                            const deleteObjectStore = deleteTransaction.objectStore('videos');
-                            const deleteRequest = deleteObjectStore.delete(blob.name);
-
-                            deleteRequest.onsuccess = () => {
-                                updateVidsList(blobUrls);
-                            };
-
-                            deleteRequest.onerror = event => {
-                                console.error('IndexedDB error:', event.target.error);
-                            };
-                        });
-
-                        li.appendChild(a);
-                        li.appendChild(fileName);
-                        li.appendChild(deleteButton);
-                        videoList.appendChild(li);
-                    });
-
-                } else {
-                    savedValues.bgMode = 'pic';
-                    localStorage.setItem("setting", JSON.stringify(savedValues)); // 没有影片改为图片模式
-                }
-            };
-
-            request.onerror = event => {
-                console.error('IndexedDB error:', event.target.error);
-            };
-        }
-
-
-        document.body.addEventListener('dragover', event => {
-            event.preventDefault(); // 阻止默认世界
-        });
-
-        document.body.addEventListener('drop', event => {
-            event.preventDefault();
-            const files = event.dataTransfer.files;
-            file(files);
-        });
-
-        input.addEventListener('change', event => {
-            const files = event.target.files;
-            file(files);
-        })
-
-        function file(files) { // 处理多个文件
-            const processFile = file => {
-                if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
-                    console.log(`${file.name} 不是图像或视频类型`);
-                    return Promise.resolve();
-                }
-
-                return new Promise(resolve => {
-                    const dbName = file.type.startsWith('image/') ? 'images' : 'videos';
-                    const storeName = file.type.startsWith('image/') ? 'images' : 'videos';
-                    const db = dbName === 'images' ? imgsDb : vidsDb;
-                    const transaction = db.transaction([storeName], 'readwrite');
-                    const objectStore = transaction.objectStore(storeName);
-                    const request = objectStore.put(file, file.name);
-
-                    request.onsuccess = () => {
-                        resolve();
-                    };
-
-                    request.onerror = event => {
-                        console.error('IndexedDB error:', event.target.error);
-                        resolve();
-                    };
-                });
-            };
-
-            const promises = [];
-
-            for (let i = 0; i < files.length; i++) {
-                promises.push(processFile(files[i]));
-            }
-
-            Promise.all(promises).then(() => {
-                updatePicsList();
-                updateVidsList();
-            });
-        }
-    </script>
+    <script src="./static/js/settings.js"></script>
 </body>
 
 </html>

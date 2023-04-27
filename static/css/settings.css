@@ -1,0 +1,219 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: transparent;
+    display: flex;
+    height: calc(100vh - 20px);
+    width: calc(100vw - 20px);
+    flex-direction: column;
+}
+
+ ::-webkit-scrollbar {
+    display: none;
+}
+
+nav {
+    position: fixed;
+    right: 20px;
+    /* position: sticky; */
+    top: 0;
+    display: flex;
+    margin-top: 60px;
+    /* width: 30%; */
+    flex-direction: column;
+    z-index: 1;
+    opacity: 0;
+}
+
+nav.show {
+    opacity: 1;
+}
+
+nav a {
+    position: relative;
+    margin: 0 20px;
+    font-size: 14pt;
+    color: #000;
+    width: max-content;
+    text-decoration: none;
+}
+
+nav a:active {
+    color: #666;
+}
+
+.arrow:before {
+    top: 0;
+    left: 0;
+    display: block;
+    pointer-events: none;
+    content: ">";
+    color: lightgreen;
+    opacity: 0;
+    position: absolute;
+    transform: translateX(-2.5em);
+    transition: transform .15s ease, opacity .15s ease;
+}
+
+.arrow:hover:before {
+    transform: translateX(-1.11em);
+    opacity: .6;
+}
+
+nav #indicator {
+    position: absolute;
+    height: 3px;
+    width: 0;
+    left: 0;
+    bottom: -6px;
+    background: lightgreen;
+    transition: .3s ease-in-out;
+    border-radius: 3px;
+    display: none;
+}
+
+.content {
+    margin: 16px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow-y: scroll;
+}
+
+.content.move-down {
+    margin-top: 40px;
+}
+
+#Setting {
+    font-size: 1.5em;
+    /* h2 */
+    margin: 16px;
+    margin-bottom: 0;
+    font-weight: 500;
+    position: sticky;
+    top: 1px;
+}
+
+#quick {
+    width: 450px;
+    max-width: 500px;
+    height: 200px;
+}
+
+textarea {
+    background: transparent;
+    outline: none;
+    border: 1px solid #999;
+}
+
+textarea:focus {
+    border: 1px solid #333;
+}
+
+#text-path {
+    stroke-dasharray: 300;
+    stroke-dashoffset: 300;
+    animation: draw 2s linear forwards;
+}
+
+@keyframes draw {
+    from {
+        stroke-dashoffset: 300;
+    }
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+.library-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.library-list>ul {
+    width: calc(100vw - 32px);
+    padding-right: calc(100% - 120px);
+    overflow: scroll;
+}
+
+.upload-btn {
+    display: block;
+    margin-top: 3px;
+    padding: 0;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+label span {
+    background: #4caf50;
+    color: #fff;
+    user-select: none;
+    padding: 0 3px;
+    margin-left: 3px;
+    border-radius: 3px;
+    font-size: 15px;
+}
+
+input[type='file'] {
+    display: none;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: nowrap;
+}
+
+li {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    width: 100px;
+    /* padding: 10px; */
+    margin: 5px 3px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    position: relative;
+}
+
+section {
+    max-width: 100px;
+    overflow: hidden;
+}
+
+section span {
+    font-size: 12px;
+    max-height: 30px;
+}
+
+button {
+    background-color: #d84315;
+    color: #fff;
+    border: none;
+    border-radius: 0 0 5px 5px;
+    padding: 3px;
+    float: left;
+    cursor: pointer;
+    margin-top: 3px;
+    width: 100%;
+    bottom: 0;
+    opacity: 0;
+    position: absolute;
+}
+
+li:hover button {
+    opacity: .75;
+    background-color: #d32f2f;
+}
+
+li button:hover {
+    opacity: 1;
+}

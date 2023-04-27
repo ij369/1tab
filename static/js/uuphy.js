@@ -3,13 +3,36 @@ const searchInput = document.getElementById('search_input');
 const sugList = document.getElementById('sug_list');
 const sugEngine = document.getElementById('sug_select');
 const searchBtn = document.getElementById('search_btn');
-const savedValues = JSON.parse(localStorage.getItem("setting")) || {}; // 读取设置
+let savedValues = JSON.parse(localStorage.getItem("setting")) || {}; // 读取设置
 let cache = {}; // 用于记忆建议词
 let sugTimer = null; // 用于延迟建议词
 let selectedIndex = -1; // 选中的建议词索引
-let quick; // 快速启动 内容
+let quick = savedValues['sug_quick'] || []; // 处理 快速启动 的内容
 let backgroundMode = savedValues.bgMode || 'pic'; // 快速启动 内容
+const transparentPic = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==';
 
+window.addEventListener("storage", e => {
+    // console.log(e);
+    if (e.key === "language") {
+        i18next.changeLanguage(e.newValue, (err, t) => {
+            if (err) {
+                console.log('语言配置出错', err);
+                return;
+            }
+            updateContent();
+        });
+    }
+    if (e.key === "setting") {
+        savedValues = JSON.parse(localStorage.getItem("setting")) || {}; // 读取设置
+        quick = savedValues['sug_quick'] || []; // 处理 快速启动 的内容
+        displayQuick();
+        getWeather();
+        displayIcons();
+
+    }
+
+
+}); // 监听localstorage
 
 /// i18n ///
 const languages = {
@@ -73,83 +96,6 @@ const updateContent = () => {
     });
 };
 /// i18n ///
-
-
-/// 快速启动 处理 ///
-if (savedValues['sug_quick'] === undefined) {
-    switch (navigator.language) {
-        case 'zh-CN':
-        case 'zh-cn':
-            // 语言环境为简体中文
-            quick = [{
-                "ti": "微博",
-                "desc": "随时随地发现新鲜事",
-                "url": "https://weibo.com/"
-            }, {
-                "ti": "哔哩哔哩",
-                "desc": "(゜-゜)つロ 干杯~",
-                "url": "https://www.bilibili.com/"
-            }, {
-                "ti": "QQ邮箱",
-                "desc": "QQ邮箱，常联系！",
-                "url": "https://mail.qq.com/"
-            }, {
-                "ti": "淘宝",
-                "desc": "淘！我喜欢",
-                "url": "https://www.taobao.com/"
-            }, {
-                "ti": "12306",
-                "desc": "中国铁路12306",
-                "url": "https://www.12306.cn/index/"
-            }, {
-                "ti": "豆瓣",
-                "desc": "豆瓣电影",
-                "url": "https://movie.douban.com/"
-            }, {
-                "ti": "本项目地址",
-                "desc": "欢迎 fork/star~<br>o(〃'▽'〃)o",
-                "url": "https://github.com/ij369/1tab"
-            }]
-            break;
-
-        default:
-            // 语言环境不是简体中文
-            quick = [{
-                "ti": "Amazon",
-                "desc": "Online shopping website.",
-                "url": "https://www.amazon.com/"
-            }, {
-                "ti": "Reddit",
-                "desc": "Reddit is a network of communities.",
-                "url": "https://www.reddit.com/"
-            }, {
-                "ti": "YouTube",
-                "desc": "Enjoy the videos and music you love",
-                "url": "https://www.youtube.com/",
-                "ico": "https://www.gstatic.com/youtube/img/branding/favicon/favicon_144x144.png"
-            }, {
-                "ti": "Gmail",
-                "desc": "Email service by Google.",
-                "url": "https://mail.google.com/mail/?tab=rm&authuser=0&ogbl"
-            }, {
-                "ti": "Facebook",
-                "desc": "Connect with friends, family and other people you know.",
-                "url": "https://www.facebook.com/"
-            }, {
-                "ti": "Wikipedia",
-                "desc": "Wikipedia is a free online encyclopedia",
-                "url": "https://www.wikipedia.org/"
-            }, {
-                "ti": "About this project",
-                "desc": "Welcome to fork/star~<br>o(〃'▽'〃)o",
-                "url": "https://github.com/ij369/1tab"
-            }]
-            break;
-    }
-} else {
-    quick = savedValues['sug_quick'];
-} // 处理 快速启动 的内容
-
 
 const delQuick = (newTabID) => {
     const index = Number(newTabID.split('link')[1]);
@@ -320,6 +266,10 @@ function search() { // 建议词
                 url = `https://www.baidu.com/su?wd=${encodeURIComponent(query)}&cb=window.baidu.sug`;
                 break;
 
+            case 'baidu_test':
+                url = `https://www.baidu.com/sugrec?ie=utf-8&json=1&prod=pc&wd=${encodeURIComponent(query)}&cb=window.baidu.sug`;
+                break;
+
             case 'taobao':
                 url = `https://suggest.taobao.com/sug?code=utf-8&q=${encodeURIComponent(query)}&callback=window.taobao.sug`;
                 break;
@@ -369,6 +319,7 @@ window.google = {
 };
 window.baidu = {
     sug: function(data) {
+        console.log(data)
         const suggestions = data.s || [];
 
         if (!suggestions.length == 0) {
@@ -480,15 +431,21 @@ searchInput.addEventListener('compositionend', function() {
 
 
 /// 天气 ///
-fetch('https://wttr.in/?format=3').then(response => response.text())
-    .then(data => {
-        document.getElementById('weather').textContent = `${data} ﹒`;
-    })
-    .catch(error => {
-        console.error(error);
+function getWeather() {
+    if (savedValues.weatherAPI) {
+        fetch(savedValues.weatherAPI).then(response => response.text())
+            .then(data => {
+                document.getElementById('weather').textContent = `${data} ﹒`;
+            })
+            .catch(error => {
+                document.getElementById('weather').textContent = '';
+                console.error(error);
+            });
+    } else {
+        // console.log('未定义天气');
         document.getElementById('weather').textContent = '';
-    });
-
+    }
+}
 /// 天气 ///
 
 
@@ -529,58 +486,82 @@ sug_select.addEventListener("change", () => {
     localStorage.setItem("setting", JSON.stringify(savedValues));
 });
 
-const getFaviconUrl = (url, legacy = false) => legacy === false ? `https://www.google.com/s2/favicons?domain=${url}&sz=256` : `https://${url.split('/')[2]}/favicon.ico`;
+let legacy = true;
+const getFaviconUrl = (url, legacy = false) => legacy === false ? `https://www.google.com/s2/favicons?sz=256&domain=${url}` : `https://${url.split('/')[2]}/favicon.ico`;
 
-displayQuick(); // 显示快速启动
 function displayQuick(c = quick) {
+    document.querySelector('.link-box').setAttribute(`style`, `--box-count:${c.length>2?Math.ceil(c.length/2):2}`);
     document.querySelector('.link-box').innerHTML = c.map((c, index) =>
-        `<div class="card"><a href="${c.url}" id="link${index}" class="card-link" target="_blank"><div class="card-ti">${c.ti}</div><div class="card-desc">${c.desc}</div><img src="" name="${c.ico||getFaviconUrl(c.url)}" namecn="${c.ico||getFaviconUrl(c.url,true)}" onerror="this.src='data:image/webp;base64,UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA==';" /></a></div>`).join('');
+        `<div class="card"><a href="${c.url}" id="link${index}" class="card-link" target="_blank"><div class="card-ti">${c.ti}</div><div class="card-desc">${c.desc}</div><img src="" name="${c.ico||getFaviconUrl(c.url)}" nameFavicon="${c.ico||getFaviconUrl(c.url,true)}" onerror="this.src='data:image/webp;base64,UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA==';" /></a></div>`).join('');
 }
 
 window.onload = async() => {
-    const errorImgs = document.querySelectorAll('img[onerror]'); // 遍历所有带有 onerror 属性的 img 元素
-
-    try {
-        const cdnResponse = await fetch('https://www.cloudflare.com/cdn-cgi/trace');
-        const cdnText = await cdnResponse.text();
-        const cdnLines = cdnText.trim().split('\n');
-        const cdnResult = {};
-        cdnLines.forEach(line => {
-            const [key, value] = line.split('=');
-            cdnResult[key] = value;
-        });
-        console.log('Cloudflare CDN:', cdnResult.loc);
-        switch (cdnResult.loc) {
-            case 'CN': // CN访问不了部分服务
-                // 遍历所有带有 onerror 属性的 img 元素
-                errorImgs.forEach((img) => {
-                    const name = img.getAttribute('namecn'); // 获取 img 元素的 name 属性值 
-                    img.setAttribute('src', name); // 将 name 属性值赋值给 img 元素的 src 属性
-                    img.removeAttribute('name');
-                    img.removeAttribute('namecn'); // 移除图标地址
-                });
-                break;
-
-            default:
-                errorImgs.forEach((img) => {
-                    const name = img.getAttribute('name');
-                    img.setAttribute('src', name);
-                    img.removeAttribute('name');
-                    img.removeAttribute('namecn'); // 移除图标地址
-                });
-                break;
-        }
-
-    } catch (error) { // CDN 挂了就改成透明
-        console.error(error);
-        errorImgs.forEach((img) => {
-            img.setAttribute('src', 'data:image/webp;base64,UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA=='); // 改成透明
-            img.removeAttribute('name');
-            img.removeAttribute('nameCN'); // 移除图标地址
-        });
-
-    }
+    displayQuick(); // 显示快速启动
+    getWeather(); // 显示天气
+    await displayIcons() // 显示图标
 };
+
+async function displayIcons() {
+    const errorImgs = document.querySelectorAll('img[onerror]'); // 遍历所有带有 onerror 属性的 img 元素
+    switch (savedValues.iconSrc) {
+        case 'auto':
+            try {
+                const cdnResponse = await fetch('https://www.cloudflare.com/cdn-cgi/trace');
+                const cdnText = await cdnResponse.text();
+                const cdnLines = cdnText.trim().split('\n');
+                const cdnResult = {};
+                cdnLines.forEach(line => {
+                    const [key, value] = line.split('=');
+                    cdnResult[key] = value;
+                });
+                console.log('Cloudflare CDN:', cdnResult.loc);
+                switch (cdnResult.loc) {
+                    case 'CN': // CN访问不了部分服务
+                        // 遍历所有带有 onerror 属性的 img 元素
+                        errorImgs.forEach((img) => {
+                            const name = img.getAttribute('nameFavicon'); // 获取 img 元素的 name 属性值 
+                            img.setAttribute('src', name); // 将 name 属性值赋值给 img 元素的 src 属性
+                        });
+                        break;
+
+                    default:
+                        errorImgs.forEach((img) => {
+                            const name = img.getAttribute('name');
+                            img.setAttribute('src', name);
+                        });
+                        break;
+                }
+
+            } catch (error) { // CDN 挂了就改成透明
+                console.error(error);
+                errorImgs.forEach((img) => {
+                    img.setAttribute('src', 'data:image/webp;base64,UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA=='); // 改成透明
+                });
+
+            } // 显示图标
+            break;
+
+        case 'favicon':
+            errorImgs.forEach((img) => {
+                const name = img.getAttribute('nameFavicon'); // 获取 img 元素的 name 属性值 
+                img.setAttribute('src', name); // 将 name 属性值赋值给 img 元素的 src 属性
+            });
+            break;
+
+        case 'google':
+            errorImgs.forEach((img) => {
+                const name = img.getAttribute('name');
+                img.setAttribute('src', name);
+            });
+            break;
+
+        default:
+            errorImgs.forEach((img) => {
+                img.setAttribute('src', 'data:image/webp;base64,UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA=='); // 改成透明
+            });
+            break;
+    }
+}
 
 labelSwitcher("search_engine");
 
@@ -646,7 +627,6 @@ function labelSwitcher(id) {
 
     selectE.addEventListener("change", () => {
         labelE.innerText = document.querySelector(`option[value="${selectE.value}"]`).innerText;
-
         savedValues[id] = selectE.value;
         localStorage.setItem("setting", JSON.stringify(savedValues));
     });
@@ -741,7 +721,7 @@ if (TOOLTIP.length > 0) { // 判断是否有 tooltip 属性的El
 
 
 /// 用于设置的 dialog ///
-const openDialog = (url, width, height) => {
+const openDialog = (url, height) => {
     // 创建遮罩层
     const mask = document.createElement("div");
     mask.style.position = "fixed";
@@ -759,13 +739,11 @@ const openDialog = (url, width, height) => {
         const dialog = document.createElement("div");
         dialog.classList.add("dialog");
         dialog.style.position = "fixed";
-        dialog.style.width = `${width}px`;
         dialog.style.maxwidth = `100vw`;
         dialog.style.height = `${height}px`;
         dialog.style.top = "50%";
         dialog.style.left = "50%";
         dialog.style.transform = "translate(-50%,-50%)";
-        dialog.style.backgroundColor = "#fff";
         dialog.style.zIndex = "10000";
         mask.appendChild(dialog);
 
@@ -802,7 +780,7 @@ const openDialog = (url, width, height) => {
     });
 };
 setting.addEventListener("click", () => {
-    openDialog('./settings.html', 720, 400);
+    openDialog('./settings.html', 400);
 });
 /// 用于设置的 dialog ///
 
@@ -1053,10 +1031,10 @@ function menuinit() {
                     )
                 }
             }, {
-                content: `${moveIcon} ${i18next.t('move')} 🔨`,
+                content: `${moveIcon} ${i18next.t('move')} `,
                 events: {
                     click: () => (
-                        newTabUrl !== null && window.open(newTabUrl, '_blank', 'noopener'), newTabUrl = null
+                        draggableAll()
                     )
                 }
             }, {
@@ -1105,7 +1083,7 @@ function menuinit() {
                 divider: "top", // top, bottom, top-bottom
                 events: {
                     click: () => (
-                        openDialog('./settings.html', 720, 400)
+                        openDialog('./settings.html', 400)
                     )
                 }
             }
@@ -1185,10 +1163,11 @@ video.onplay = function() {
 
 const indexedDB = window.indexedDB;
 
+picture.src = transparentPic;
 switch (backgroundMode) {
     case 'vid':
         vid(); // 载入影片, 显示一张透明图
-        video.setAttribute('poster', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==');
+        video.setAttribute('poster', transparentPic);
         document.addEventListener("visibilitychange", function() { // 当用户离开页面时, 暂停播放
             const E = document.querySelectorAll('.bg');
             switch (document.visibilityState) {
@@ -1227,6 +1206,7 @@ function pic() {
     imgsRequest.onupgradeneeded = event => {
         imgsDb = event.target.result;
         imgsDb.createObjectStore('images');
+        imgsDb.createObjectStore('preview');
     };
 
     imgsRequest.onerror = event => {
@@ -1264,7 +1244,9 @@ function pic() {
 
                 }
             } else {
-                video.setAttribute('poster', './pexels-no-name-66997.jpg'); // 没有
+                video.setAttribute('poster', './static/img/pexels-no-name-66997.jpg'); // 没有
+
+                // video.setAttribute('poster', 'https://source.unsplash.com/random/2048×1080?creative,abstract');
             }
         };
 
@@ -1344,3 +1326,355 @@ function vid() {
 }
 
 /// 背景处理 ///
+
+
+/// 移动 ///
+class Banner {
+    constructor(content, buttons) {
+        this.content = content;
+        this.buttons = buttons;
+        this.createBanner();
+    }
+
+    createBanner() {
+        // 创建横幅元素和样式
+        const banner = document.createElement('div');
+        banner.style.display = 'flex';
+        banner.style.zIndex = '1';
+        banner.style.justifyContent = 'space-between';
+        banner.style.position = 'fixed';
+        banner.style.bottom = 0;
+        banner.style.backdropFilter = 'blur(6px)'
+        banner.style.width = '100%';
+        banner.style.backgroundColor = '#33333366';
+        banner.style.color = 'white';
+        banner.style.padding = '0';
+
+        // 添加横幅内容
+        const content = document.createElement('p');
+        content.innerHTML = this.content;
+        content.style.paddingLeft = '18px';
+        banner.appendChild(content);
+
+        // 添加按钮组容器
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.display = 'flex';
+        buttonContainer.style.paddingRight = '18px';
+        buttonContainer.style.justifyContent = 'flex-end';
+        banner.appendChild(buttonContainer);
+
+        // 添加按钮
+        this.buttons.forEach((button, index) => {
+            const buttonElement = document.createElement('button');
+            buttonElement.innerText = button.text;
+            buttonElement.style.padding = '18px';
+            if (index === 1) {
+                buttonElement.style.backgroundColor = '#33333399'
+            } else {
+                buttonElement.style.backgroundColor = '#00000011'
+            }
+            buttonElement.style.border = '0'
+            buttonElement.style.color = 'white'
+            buttonElement.onclick = button.onclick;
+            buttonContainer.appendChild(buttonElement);
+        });
+
+        // 添加到页面顶部
+        document.body.insertBefore(banner, document.body.firstChild);
+        // 保存 banner 元素的引用，以便稍后销毁它
+        this.bannerElement = banner;
+    }
+    destroyBanner() {
+        if (this.bannerElement) {
+            this.bannerElement.remove();
+            this.bannerElement = null;
+        }
+    }
+}
+
+const cancelDrag = () => {
+    banner.destroyBanner();
+    removeEditStyle();
+};
+const saveDrag = () => {
+    const linkElements = document.querySelectorAll('.card-link');
+    // 将所有card-link的id提取出来，然后去掉文字部分，转数字型组成新index数组用于排序
+    const newIndices = Array.from(linkElements).map((e) => Number(e.id.replace('link', '')));
+    quick = newIndices.map((index) => quick[index]).reduce((acc, cur) => {
+        acc.push(cur);
+        return acc;
+    }, []);
+    // console.log('新顺序', quick);
+    savedValues['sug_quick'] = quick; // 更新新顺序的快速启动
+    localStorage.setItem("setting", JSON.stringify(savedValues)); // 保存设置
+    removeEditStyle();
+    banner.destroyBanner(); // 销毁 banner
+};
+
+class Draggable {
+    constructor(options) {
+        this.parent = options.element; // 父级元素
+        this.cloneElementClassName = options.cloneElementClassName;
+        this.isPointerdown = false;
+        this.diff = {
+            x: 0,
+            y: 0
+        };
+        this.drag = {
+            element: null,
+            index: 0,
+            lastIndex: 0
+        }; // 拖拽元素
+        this.drop = {
+            element: null,
+            index: 0,
+            lastIndex: 0
+        }; // 释放元素
+        this.clone = {
+            element: null,
+            x: 0,
+            y: 0
+        };
+        this.lastPointermove = {
+            x: 0,
+            y: 0
+        };
+        this.rectList = [];
+        this.init();
+    }
+    init() {
+            this.getRect();
+            this.bindEventListener();
+        }
+        // 获取元素位置信息
+    getRect() {
+        this.rectList.length = 0;
+        for (const item of this.parent.children) {
+            this.rectList.push(item.getBoundingClientRect());
+        }
+    }
+    handlePointerdown(e) {
+        // 如果是鼠标点击，只响应左键
+        if (e.pointerType === 'mouse' && e.button !== 0) {
+            return;
+        }
+        if (e.target === this.parent) {
+            return;
+        }
+        this.isPointerdown = true;
+        this.parent.setPointerCapture(e.pointerId);
+        this.lastPointermove.x = e.clientX;
+        this.lastPointermove.y = e.clientY;
+        this.drag.element = e.target;
+        this.drag.element.classList.add('active');
+        this.clone.element = this.drag.element.cloneNode(true);
+        this.clone.element.className = this.cloneElementClassName;
+        this.clone.element.style.transition = 'none';
+        const i = [].indexOf.call(this.parent.children, this.drag.element);
+        this.clone.x = this.rectList[i].left;
+        this.clone.y = this.rectList[i].top;
+        this.drag.index = i;
+        this.drag.lastIndex = i;
+        this.clone.element.style.transform = 'translate3d(' + this.clone.x + 'px, ' + this.clone.y + 'px, 0)';
+        document.body.appendChild(this.clone.element);
+    }
+    handlePointermove(e) {
+        if (this.isPointerdown) {
+            this.diff.x = e.clientX - this.lastPointermove.x;
+            this.diff.y = e.clientY - this.lastPointermove.y;
+            this.lastPointermove.x = e.clientX;
+            this.lastPointermove.y = e.clientY;
+            this.clone.x += this.diff.x;
+            this.clone.y += this.diff.y;
+            this.clone.element.style.transform = 'translate3d(' + this.clone.x + 'px, ' + this.clone.y + 'px, 0)';
+            for (let i = 0; i < this.rectList.length; i++) {
+                // 碰撞检测
+                if (i !== this.drag.index && e.clientX > this.rectList[i].left && e.clientX < this.rectList[i].right &&
+                    e.clientY > this.rectList[i].top && e.clientY < this.rectList[i].bottom) {
+                    this.drop.element = this.parent.children[i];
+                    this.drop.lastIndex = i;
+                    if (this.drag.element !== this.drop.element) {
+                        if (this.drag.index < i) {
+                            this.parent.insertBefore(this.drag.element, this.drop.element.nextElementSibling);
+                            this.drop.index = i - 1;
+                        } else {
+                            this.parent.insertBefore(this.drag.element, this.drop.element);
+                            this.drop.index = i + 1;
+                        }
+                        this.drag.index = i;
+                        const dragRect = this.rectList[this.drag.index];
+                        const lastDragRect = this.rectList[this.drag.lastIndex];
+                        const dropRect = this.rectList[this.drop.index];
+                        const lastDropRect = this.rectList[this.drop.lastIndex];
+                        this.drag.lastIndex = i;
+                        this.drag.element.style.transition = 'none';
+                        this.drop.element.style.transition = 'none';
+                        this.drag.element.style.transform = 'translate3d(' + (lastDragRect.left - dragRect.left) + 'px, ' + (lastDragRect.top - dragRect.top) + 'px, 0)';
+                        this.drop.element.style.transform = 'translate3d(' + (lastDropRect.left - dropRect.left) + 'px, ' + (lastDropRect.top - dropRect.top) + 'px, 0)';
+                        this.drag.element.offsetLeft; // 触发重绘
+                        this.drag.element.style.transition = 'transform 150ms';
+                        this.drop.element.style.transition = 'transform 150ms';
+                        this.drag.element.style.transform = 'translate3d(0px, 0px, 0px)';
+                        this.drop.element.style.transform = 'translate3d(0px, 0px, 0px)';
+                    }
+                    break;
+                }
+            }
+        }
+    }
+    handlePointerup(e) {
+        if (this.isPointerdown) {
+            this.isPointerdown = false;
+            this.drag.element.classList.remove('active');
+            this.clone.element.remove();
+        }
+    }
+    handlePointercancel(e) {
+        if (this.isPointerdown) {
+            this.isPointerdown = false;
+            this.drag.element.classList.remove('active');
+            this.clone.element.remove();
+        }
+    }
+    bindEventListener() {
+        this.handlePointerdown = this.handlePointerdown.bind(this);
+        this.handlePointermove = this.handlePointermove.bind(this);
+        this.handlePointerup = this.handlePointerup.bind(this);
+        this.handlePointercancel = this.handlePointercancel.bind(this);
+        this.getRect = this.getRect.bind(this);
+        this.parent.addEventListener('pointerdown', this.handlePointerdown);
+        this.parent.addEventListener('pointermove', this.handlePointermove);
+        this.parent.addEventListener('pointerup', this.handlePointerup);
+        this.parent.addEventListener('pointercancel', this.handlePointercancel);
+        window.addEventListener('scroll', this.getRect);
+        window.addEventListener('resize', this.getRect);
+        window.addEventListener('orientationchange', this.getRect);
+    }
+    unbindEventListener() {
+        this.parent.removeEventListener('pointerdown', this.handlePointerdown);
+        this.parent.removeEventListener('pointermove', this.handlePointermove);
+        this.parent.removeEventListener('pointerup', this.handlePointerup);
+        this.parent.removeEventListener('pointercancel', this.handlePointercancel);
+        window.removeEventListener('scroll', this.getRect);
+        window.removeEventListener('resize', this.getRect);
+        window.removeEventListener('orientationchange', this.getRect);
+    }
+
+    destroy() {
+        this.parent.removeEventListener('pointerdown', this.handlePointerdown);
+        document.removeEventListener('pointermove', this.handlePointermove);
+        document.removeEventListener('pointerup', this.handlePointerup);
+        document.removeEventListener('pointercancel', this.handlePointercancel);
+    }; // 取消Draggable
+}
+// Draggable 实现参考 https://juejin.cn/post/7022824391163510821
+
+let draggable;
+let banner;
+
+const draggableAll = () => {
+    addEditStyle(); // 添加样式
+    setTimeout(() => {
+        draggable = new Draggable({
+            element: document.querySelector('.link-box'),
+            cloneElementClassName: 'clone-card'
+        });
+        const cards = document.querySelectorAll('.card');
+        cards.forEach(c => {
+            c.classList.add('cursor');
+        }); // 添加鼠标样式
+    }, 600);
+    banner = new Banner(`<b>[${i18next.t('drag_mode')}]</b> ${i18next.t('drag_tip')}`, [
+        { text: i18next.t('Cancel'), onclick: cancelDrag },
+        { text: i18next.t('Save'), onclick: saveDrag }
+    ]);
+
+};
+
+// 添加样式
+const removeEditStyle = () => {
+    const styleToRemove = document.getElementById('edit_styles');
+    if (styleToRemove) {
+        styleToRemove.parentNode.removeChild(styleToRemove);
+        draggable.destroy();
+    } // 删除 样式
+
+    const E = document.querySelector('.link-box').querySelectorAll('.disabled');
+    E.forEach(e => {
+        e.classList.remove('disabled');
+    }); // 移除所有 disabled类
+    const cards = document.querySelectorAll('.card');
+    cards.forEach(c => {
+        c.classList.add('cursor');
+    }); // 移除 鼠标样式
+};
+
+const addEditStyle = () => {
+    [...document.querySelectorAll('.card, .card-link')].forEach(
+        box => box.classList.add('disabled')
+    ); // 添加 disabled类
+
+
+    if (document.getElementById('edit_styles')) {
+        return;
+    } // 判断是否已有
+
+    const style = document.createElement('style');
+    style.id = 'edit_styles';
+    style.innerHTML = `
+    * { 
+        touch-action: none;
+        -webkit-user-select: none!important;
+        user-select: none!important;
+    }
+    .active {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+    }
+    .clone-card {
+        display: none;
+    }
+    .card-link.disabled {
+        cursor: default;
+        pointer-events: none;
+        text-decoration: none;
+        color: gray;
+    }
+    .card.disabled {
+        height: auto;
+    }
+    .card.cursor {
+        cursor: move;
+    }
+    .card-tit{
+        color: #8bc34a;
+        transition: all .45s ease-in;
+    }
+    @media (max-width:840px) {
+        .card-link.disabled {
+            height: 32px;
+            border-radius: 3px;
+            font-size: 16px;
+            padding: 0 0 0 16px;
+            transition: all .3s ease-in;
+        }
+        .card-ti {
+            font-size:18px
+        }
+        .search{
+            display:none;
+        }
+        .link-box {
+            margin-top: 72px;
+        }
+        .card-desc {
+            display:none;
+        }
+        .card-link img {
+            bottom: 1px;
+            right: 12px;
+        }
+    }`;
+    document.head.appendChild(style);
+};
+/// 移动 ///

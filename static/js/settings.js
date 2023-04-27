@@ -192,13 +192,14 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelector(`input[type="radio"][name="weather"][value="wttr.in"]`).checked = true;
             break;
         case '':
+        case undefined: // 没有设置天气时
             document.querySelector(`input[type="radio"][name="weather"][value="close"]`).checked = true;
             break;
         default:
             document.querySelector(`input[type="radio"][name="weather"][value="personalAPI"]`).checked = true;
             break;
     }
-    weather.value = savedValues.weatherAPI;
+    weather.value = savedValues.weatherAPI || ''; // 没有设置天气时赋值''
     // 天气来源 //
 
     if (savedValues.sug_quick) {

@@ -8,7 +8,6 @@ let cache = {}; // 用于记忆建议词
 let sugTimer = null; // 用于延迟建议词
 let selectedIndex = -1; // 选中的建议词索引
 let quick = savedValues['sug_quick'] || []; // 处理 快速启动 的内容
-let backgroundMode = savedValues.bgMode || 'pic'; // 快速启动 内容
 const transparentPic = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4nGMAAQAABQABDQottAAAAABJRU5ErkJggg==';
 
 window.addEventListener("storage", e => {
@@ -25,6 +24,7 @@ window.addEventListener("storage", e => {
     if (e.key === "setting") {
         savedValues = JSON.parse(localStorage.getItem("setting")) || {}; // 读取设置
         quick = savedValues['sug_quick'] || []; // 处理 快速启动 的内容
+        displayBg();
         displayQuick();
         getWeather();
         displayIcons();
@@ -496,6 +496,7 @@ function displayQuick(c = quick) {
 }
 
 window.onload = async() => {
+    displayBg(); // 显示背景
     displayQuick(); // 显示快速启动
     getWeather(); // 显示天气
     await displayIcons() // 显示图标
@@ -738,13 +739,6 @@ const openDialog = (url, height) => {
         // 创建对话框
         const dialog = document.createElement("div");
         dialog.classList.add("dialog");
-        dialog.style.position = "fixed";
-        dialog.style.maxwidth = `100vw`;
-        dialog.style.height = `${height}px`;
-        dialog.style.top = "50%";
-        dialog.style.left = "50%";
-        dialog.style.transform = "translate(-50%,-50%)";
-        dialog.style.zIndex = "10000";
         mask.appendChild(dialog);
 
         // 创建关闭按钮
@@ -1102,11 +1096,11 @@ const sc_setting = (original_url = '') => {
     dialog.innerHTML = `
     <form id="dialog_form">
     <label for="dialog_url">${i18next.t('URL')}:</label>
-    <input type="text" id="dialog_url" autocomplete="off" value="${original_url}" pattern=".*:\/\/.*" required><br>
+    <input type="text" id="dialog_url" autocomplete="off" spellcheck="false" value="${original_url}" pattern=".*:\/\/.*" required><br>
     <label for="dialog_ti">${i18next.t('Title')}:</label>
-    <input type="text" id="dialog_ti" autocomplete="off" value="${original_url===''?'':findQuick(original_url)['ti']}"><br>
+    <input type="text" id="dialog_ti" autocomplete="off" spellcheck="false" value="${original_url===''?'':findQuick(original_url)['ti']}"><br>
     <label for="dialog_desc">${i18next.t('Description')}:</label>
-    <input type="text" id="dialog_desc" autocomplete="off" value="${original_url===''?'':findQuick(original_url)['desc']}"><br>
+    <input type="text" id="dialog_desc" autocomplete="off" spellcheck="false" value="${original_url===''?'':findQuick(original_url)['desc']}"><br>
     <div><button type="submit">${i18next.t('Save')}</button><button onclick="shortcut_setting.remove()">${i18next.t('Cancel')}</button></div>
     </form>`;
 
@@ -1160,44 +1154,50 @@ video.onplay = function() {
     }, 1000);
 }
 
-
-const indexedDB = window.indexedDB;
-
-picture.src = transparentPic;
-switch (backgroundMode) {
-    case 'vid':
-        vid(); // 载入影片, 显示一张透明图
-        video.setAttribute('poster', transparentPic);
-        document.addEventListener("visibilitychange", function() { // 当用户离开页面时, 暂停播放
-            const E = document.querySelectorAll('.bg');
-            switch (document.visibilityState) {
-                case 'visible': // 返回标签页
-                    setTimeout(() => {
-                        E.forEach((e) => {
-                            e.removeAttribute('style')
-                        });
+function displayBg() {
+    switch (savedValues.bgMode) {
+        case 'vid':
+            vid(); // 载入影片, 显示一张透明图
+            video.setAttribute('poster', transparentPic);
+            document.addEventListener("visibilitychange", function() { // 当用户离开页面时, 暂停播放
+                const E = document.querySelectorAll('.bg');
+                switch (document.visibilityState) {
+                    case 'visible': // 返回标签页
                         setTimeout(() => {
-                            video.play();
-                        }, 700);
-                    }, 300);
-                    break;
-                case 'hidden': // 离开标签页
-                    E.forEach((e) => {
-                        e.setAttribute('style', 'opacity: 0;')
-                    });
-                    video.pause();
-                    break;
-            }
-        })
-        break;
-
-    default:
-        pic();
-        video.style.opacity = 1;
-        break;
+                            E.forEach((e) => {
+                                e.removeAttribute('style')
+                            });
+                            setTimeout(() => {
+                                video.play();
+                            }, 700);
+                        }, 300);
+                        break;
+                    case 'hidden': // 离开标签页
+                        E.forEach((e) => {
+                            e.setAttribute('style', 'opacity: 0;')
+                        });
+                        video.pause();
+                        break;
+                }
+            })
+            break;
+        case 'pic':
+        default:
+            pic();
+            video.style.opacity = 1;
+            break;
+    }
 }
 
 function pic() {
+
+    const indexedDB = window.indexedDB;
+
+    video.pause();
+    video.classList.add('hid');
+    document.getElementById('canvas').classList.add('hid');
+    video.src = '';
+    picture.classList.remove('hid');
     let imgsTimer;
 
     const imgsRequest = indexedDB.open('images-db', 1);
@@ -1224,27 +1224,33 @@ function pic() {
 
         request.onsuccess = event => {
             const blobs = event.target.result;
+            picture.style.opacity = 1;
 
             if (blobs.length > 0) {
                 blobs.forEach(blob => {
                     urls.push(URL.createObjectURL(blob));
                 });
-                video.setAttribute('poster', urls[0]); // 显示第一张图像
+                // video.setAttribute('poster', urls[0]); // 显示第一张图像
+                picture.src = urls[0];
+
 
                 if (urls.length > 1) {
                     let currentIndex = 1;
-                    const intervalSeconds = 60; // 60s切换下一张
+                    const intervalSeconds = 5; // 60s切换下一张
 
                     console.log(urls)
 
                     imgsTimer = setInterval(() => {
-                        video.setAttribute('poster', urls[currentIndex]);
+                        // video.setAttribute('poster', urls[currentIndex]);
+                        picture.src = urls[currentIndex];
                         currentIndex = (currentIndex + 1) % urls.length;
                     }, intervalSeconds * 1000); // 循环放图
 
                 }
             } else {
-                video.setAttribute('poster', './static/img/pexels-no-name-66997.jpg'); // 没有
+                let defaultPic = './static/img/pexels-no-name-66997.jpg';
+                picture.src = defaultPic;
+                video.setAttribute('poster', defaultPic); // 没有
 
                 // video.setAttribute('poster', 'https://source.unsplash.com/random/2048×1080?creative,abstract');
             }
@@ -1260,6 +1266,12 @@ function pic() {
 
 
 function vid() {
+    video.classList.remove('hid');
+    document.getElementById('canvas').classList.remove('hid');
+    picture.src = transparentPic;
+    picture.classList.add('hid');
+    const indexedDB = window.indexedDB;
+
     const request = indexedDB.open('videos-db', 1);
 
     request.onupgradeneeded = event => {

@@ -18,11 +18,11 @@
         <a class="arrow" href="#more">More</a>
         <a class="arrow" href="#about">About</a>
     </nav>
-    <header id="Setting">Settings</header>
+    <header id="Setting" i18n="settings">Settings</header>
     <div class="content">
 
         <div id="display">
-            <h3>Display</h3>
+            <h3 i18n="display">Display</h3>
             <label for="language" i18n='language'>Language</label>
             <select id="language">
                 <option value="en">English</option>
@@ -32,9 +32,9 @@
         </div>
         <br>
         <div id="preferences">
-            <h3>Preferences</h3>
+            <h3 i18n="preferences">Preferences</h3>
             <div>
-                <label for="search_engine" class="search_engine back" title="You can click to change the search engine">搜索引擎</label>
+                <label for="search_engine" class="search_engine back" title="You can click to change the search engine" i18n="search_engine">Search engine</label>
                 <select id="search_engine" onchange="changePreferences(this.id,this.value)">
                     <option value="google">Google</option>
                     <option value="baidu">Baidu</option>
@@ -53,17 +53,17 @@
         </div>
         <br>
         <div id="background">
-            <h3>Background</h3>
+            <h3 i18n="background">Background</h3>
             <div>
-                <label for="Opacity">Opacity</label>
-                <input id="Opacity" type="number" value="67" min="1" max="99" step="1" onchange="parent.setMask(this.value);">
-                <h4>Mode</h4>
-                <label><input type="radio" name="mod" value="pic">Pictures</label>
-                <label><input type="radio" name="mod" value="vid">Videos</label>
+                <label for="Opacity" i18n="opacity">Opacity</label>
+                <input id="Opacity" type="range" value="67" min="1" max="99" step="1" onchange="parent.setMask(this.value);">
+                <h4 i18n="mode">Mode</h4>
+                <label><input type="radio" name="mod" value="pic"><span i18n="pictures">Pictures</span></label>
+                <label><input type="radio" name="mod" value="vid"><span i18n="videos">Videos</span></label>
             </div>
             <div>
-                <h4>Library</h4>
-                <label for="input" class="upload-btn"><span>Click to Select File</span></label>
+                <h4 i18n="library">Library</h4>
+                <label for="input" class="upload-btn"><span i18n="update_tip" id="update_tip">Click to Select File</span></label>
                 <input id="input" type="file" accept="image/*, video/*" multiple>
 
                 <div class="library-list">
@@ -74,31 +74,31 @@
         </div>
         <br>
         <div id="more">
-            <h3>More</h3>
+            <h3 i18n="more">More</h3>
             <div>
-                <h4>天气</h4>
-                <label><input type="radio" name="weather" value="close" onclick="weather.setAttribute('disabled','disabled');weather.value=``;setWeather()">Close</label>
+                <h4 i18n="weather">Weather</h4>
+                <label><input type="radio" name="weather" value="close" onclick="weather.setAttribute('disabled','disabled');weather.value=``;setWeather()"><span i18n="close">Close</span></label>
                 <label><input type="radio" name="weather" value="wttr.in" onclick="weather.setAttribute('disabled','disabled');weather.value=`https:\/\/wttr.in\/?format=3`;setWeather()">Wttr.in</label>
-                <label><input type="radio" name="weather" value="personalAPI" onclick="weather.removeAttribute('disabled');weather.value=``;setWeather()">Other</label><br>
-                <textarea id="weather" autocomplete="off" disabled onchange="setWeather()"></textarea>
+                <label><input type="radio" name="weather" value="personalAPI" onclick="weather.removeAttribute('disabled');weather.value=``;setWeather()"><span i18n="other">Other</span></label><br>
+                <textarea id="weather" autocomplete="off" disabled onchange="setWeather()" spellcheck="false"></textarea>
             </div>
             <div>
-                <h4>图标</h4>
-                <label><input type="radio" name="icon" value="close" onclick="weather.setAttribute('disabled','disabled')">close</label>
-                <label><input type="radio" name="icon" value="auto" onclick="weather.setAttribute('disabled','disabled')">Auto</label>
+                <h4 i18n="icon">Icon</h4>
+                <label><input type="radio" name="icon" value="close" onclick="weather.setAttribute('disabled','disabled')"><span i18n="close">close</span></label>
+                <label><input type="radio" name="icon" value="auto" onclick="weather.setAttribute('disabled','disabled')"><span i18n="auto">Auto</span></label>
                 <label><input type="radio" name="icon" value="favicon" onclick="weather.setAttribute('disabled','disabled')">favicon.ico</label>
                 <label><input type="radio" name="icon" value="google" onclick="weather.setAttribute('disabled','disabled')">Google API</label><br>
             </div>
             <div>
-                <h4>快速启动</h4>
-                <label><input type="radio" name="quick" onclick="preset('universal')">预设1</label>
-                <label><input type="radio" name="quick" onclick="preset('CN')">预设2</label><br>
-                <textarea id="quick" autocomplete="off" onchange="saveQuick(this.value)"></textarea>
+                <h4 i18n="Q">Quick Launch</h4>
+                <label><input type="radio" name="quick" onclick="preset('universal')"><span i18n="preset1">预设1</span></label>
+                <label><input type="radio" name="quick" onclick="preset('CN')" ><span i18n="preset2">预设2</span></label><br>
+                <textarea id="quick" autocomplete="off" onchange="saveQuick(this.value)" spellcheck="false"></textarea>
             </div>
         </div>
         <br>
         <div id="about">
-            <h3>About</h3>
+            <h3 i18n="about">About</h3>
             <a href="https://github.com/ij369/1tab">Github</a>
         </div>
     </div>

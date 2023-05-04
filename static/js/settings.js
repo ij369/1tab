@@ -29,28 +29,28 @@ item.forEach(i => {
 });
 
 
-if ('ResizeObserver' in window) { // 现判读是否支持 ResizeObserver
-    const observer = new ResizeObserver(entries => {
-        if (!isResizing) {
-            isResizing = true;
-            setTimeout(() => {
-                const {
-                    scrollHeight,
-                    offsetHeight
-                } = content;
-                if (scrollHeight > offsetHeight) {
-                    nav.classList.add('show');
-                } else {
-                    nav.classList.remove('show');
-                }
-                isResizing = false;
-            }, 600); // 防抖
-        }
-    });
-    observer.observe(content);
-} else {
-    document.querySelector('nav').style.display = 'none'; // 不支持ResizeObserver直接隐藏掉
-}
+// if ('ResizeObserver' in window) { // 现判读是否支持 ResizeObserver
+//     const observer = new ResizeObserver(entries => {
+//         if (!isResizing) {
+//             isResizing = true;
+//             setTimeout(() => {
+//                 const {
+//                     scrollHeight,
+//                     offsetHeight
+//                 } = content;
+//                 if (scrollHeight > offsetHeight) {
+//                     nav.classList.add('show');
+//                 } else {
+//                     nav.classList.remove('show');
+//                 }
+//                 isResizing = false;
+//             }, 600); // 防抖
+//         }
+//     });
+//     observer.observe(content);
+// } else {
+//     document.querySelector('nav').style.display = 'none'; // 不支持ResizeObserver直接隐藏掉
+// }
 
 window.scrollTo(0, 0);
 
@@ -152,12 +152,13 @@ const updateContent = () => {
 const changeLanguage = lang => {
     i18next.changeLanguage(lang, (err, t) => {
         localStorage.setItem('language', lang);
-        updateContent();
         if (err) {
             console.log('语言配置出错', err);
             return;
         }
         updateContent();
+        updatePicsList();
+        updateVidsList();
     });
 };
 
@@ -180,6 +181,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     bgModeRadios.forEach(radio => {
         radio.addEventListener('change', (event) => {
+            bgModeRadios.forEach(i => i.disabled = true);
+            setTimeout(() => {
+                bgModeRadios.forEach(i => i.disabled = false);
+            }, 1000);
             // console.log(event.target.value); // 模式
             savedValues.bgMode = event.target.value;
             localStorage.setItem("setting", JSON.stringify(savedValues));
@@ -380,7 +385,7 @@ function updatePicsList() {
             fileName.innerHTML = filename(file); // 拆分文件名
 
             const deleteButton = document.createElement('button');
-            deleteButton.innerText = 'Delete';
+            deleteButton.innerText = i18next.t('delete');
             deleteButton.addEventListener('click', () => {
                 const deleteTransaction = imgsDb.transaction(['images'], 'readwrite');
                 const deleteObjectStore = deleteTransaction.objectStore('images');
@@ -521,7 +526,7 @@ function updateVidsList(blobUrls = []) {
                 a.width = 100;
                 a.target = '_blank';
                 a.title = blob.name; // 提示词为文件名, 不一定会立即加载
-                deleteButton.textContent = 'Delete';
+                deleteButton.textContent = i18next.t('delete');
                 deleteButton.addEventListener('click', () => {
                     const deleteTransaction = vidsDb.transaction('videos', 'readwrite');
                     const deleteObjectStore = deleteTransaction.objectStore('videos');

@@ -17,27 +17,26 @@ body {
 }
 
 nav {
+    height: 45px;
     position: fixed;
-    right: 20px;
-    /* position: sticky; */
-    top: 0;
+    top: 20px;
+    right: 0;
+    flex-direction: row;
+    margin: 0 16px;
     display: flex;
-    margin-top: 60px;
-    /* width: 30%; */
-    flex-direction: column;
     z-index: 1;
     opacity: 0;
 }
 
-nav.show {
+nav:hover {
     opacity: 1;
 }
 
 nav a {
     position: relative;
-    margin: 0 20px;
-    font-size: 14pt;
-    color: #000;
+    margin: 0 16px;
+    font-size: 12pt;
+    color: #999;
     width: max-content;
     text-decoration: none;
 }
@@ -46,13 +45,17 @@ nav a:active {
     color: #666;
 }
 
+nav a:hover {
+    color: #111;
+}
+
 .arrow:before {
     top: 0;
     left: 0;
     display: block;
     pointer-events: none;
     content: ">";
-    color: lightgreen;
+    color: #111;
     opacity: 0;
     position: absolute;
     transform: translateX(-2.5em);
@@ -91,11 +94,11 @@ nav #indicator {
 #Setting {
     font-size: 1.5em;
     /* h2 */
-    margin: 16px;
     margin-bottom: 0;
     font-weight: 500;
     position: sticky;
     top: 1px;
+    margin: 16px 0 0 16px;
 }
 
 #quick {
@@ -149,7 +152,7 @@ textarea:focus {
     cursor: pointer;
 }
 
-label span {
+label #update_tip {
     background: #4caf50;
     color: #fff;
     user-select: none;
@@ -179,7 +182,7 @@ li {
     width: 100px;
     /* padding: 10px; */
     margin: 5px 3px;
-    border: 1px solid #ccc;
+    outline: 1px solid #ccc;
     border-radius: 5px;
     position: relative;
 }
@@ -216,4 +219,34 @@ li:hover button {
 
 li button:hover {
     opacity: 1;
+}
+
+#about a {
+    color: #333;
+}
+
+@media (max-width:600px) {
+    nav {
+        display: none;
+    }
+    #quick {
+        width: calc(100% - 10px);
+    }
+}
+
+@media (prefers-color-scheme:dark) {
+    body,
+    nav a:hover,
+    textarea {
+        color: #ddd;
+    }
+    textarea {
+        border-color: #333;
+    }
+    li {
+        outline-color: #333;
+    }
+    #about a {
+        color: #999;
+    }
 }

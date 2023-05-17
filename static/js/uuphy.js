@@ -722,21 +722,20 @@ if (TOOLTIP.length > 0) { // 判断是否有 tooltip 属性的El
 
 
 /// 用于设置的 dialog ///
-const openDialog = (url, height) => {
-    // 创建遮罩层
-    const mask = document.createElement("div");
-    mask.style.position = "fixed";
-    mask.style.top = "0";
-    mask.style.bottom = "0";
-    mask.style.left = "0";
-    mask.style.right = "0";
-    mask.style.backgroundColor = "transparent";
-    mask.style.zIndex = "9999";
-
-    // 检查对话框是否已经存在
+const openDialog = (url) => {
+    // 检查dialog是否已经存在
     let dialog = document.querySelector(".dialog");
     if (!dialog) {
-        // 创建对话框
+        // 创建遮罩层
+        const mask = document.createElement("div");
+        mask.style.position = "fixed";
+        mask.style.top = "0";
+        mask.style.bottom = "0";
+        mask.style.left = "0";
+        mask.style.right = "0";
+        mask.style.backgroundColor = "transparent";
+        mask.style.zIndex = "9999";
+        // 创建dialog
         const dialog = document.createElement("div");
         dialog.classList.add("dialog");
         mask.appendChild(dialog);
@@ -763,16 +762,18 @@ const openDialog = (url, height) => {
         iframe.style.boxShadow = '0 0 9px rgba(0, 0, 0, 0.15)';
         dialog.appendChild(iframe);
         dialog.appendChild(closeBtn);
+        document.body.appendChild(mask);
+
+        // 给遮罩层绑定点击事件，点击遮罩层关闭对话框
+        mask.addEventListener("click", () => {
+            document.body.removeChild(mask);
+        });
+    } else {
+        console.log('dialog已存在')
     }
 
-    document.body.appendChild(mask);
-
-
-    // 给遮罩层绑定点击事件，点击遮罩层关闭对话框
-    mask.addEventListener("click", () => {
-        document.body.removeChild(mask);
-    });
 };
+
 setting.addEventListener("click", () => {
     openDialog('./settings.html', 400);
 });
